@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv4 Object Detection</title>
+    <style>
+        #imagePreview {
+            max-width: 100%;
+            height: auto;
+        }
+        .result {
+            border: 2px solid green;
+            margin: 10px;
+            padding: 10px;
+        }
+        .image-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload an Image for Object Detection</h1>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <div class="image-container">
+        <h2>Image Preview:</h2>
+        <img id="imagePreview" src="" alt="Uploaded Image">
+    </div>
+
+    <h2>Detected Objects:</h2>
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var formData = new FormData(this);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                displayResults(data);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function displayResults(data) {
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '';  // Clear previous results
+
+            if (data.length === 0) {
+                outputDiv.innerHTML = '<p>No objects detected.</p>';
+            } else {
+                data.forEach(item => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result';
+                    resultDiv.innerHTML = `<strong>Label:</strong> ${item.label} <br>
+                                           <strong>Confidence:</strong> ${item.confidence.toFixed(2)} <br>
+                                           <strong>Bounding Box:</strong> [${item.bbox.join(', ')}]`;
+                    outputDiv.appendChild(resultDiv);
+                });
+            }
+        }
+
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('imagePreview').src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    </script>
+</body>
+</html>
