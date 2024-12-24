@@ -5,37 +5,134 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YOLOv4 Object Detection</title>
     <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #4CAF50;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.5em;
+            color: #555;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        label {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.2em;
+            text-align: center;
+            display: inline-block;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .image-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
         #imagePreview {
             max-width: 100%;
             height: auto;
+            border-radius: 8px;
+            margin-top: 20px;
         }
+
         .result {
-            border: 2px solid green;
-            margin: 10px;
-            padding: 10px;
+            border: 2px solid #4CAF50;
+            background-color: #f9f9f9;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
-        .image-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+
+        .result strong {
+            color: #4CAF50;
+        }
+
+        .no-detection {
+            font-size: 1.2em;
+            text-align: center;
+            color: #999;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Upload an Image for Object Detection</h1>
+    <div class="container">
+        <h1>YOLOv4 Object Detection</h1>
+        <p class="text-center">Upload an image to detect objects with YOLOv4.</p>
 
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="file" name="file" required>
-        <button type="submit">Upload</button>
-    </form>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">Choose Image</label>
+                <input type="file" id="file" name="file" required>
+            </div>
+            <button type="submit">Upload Image</button>
+        </form>
 
-    <div class="image-container">
-        <h2>Image Preview:</h2>
-        <img id="imagePreview" src="" alt="Uploaded Image">
+        <div class="image-container">
+            <h2>Image Preview:</h2>
+            <img id="imagePreview" src="" alt="Uploaded Image">
+        </div>
+
+        <div id="output">
+            <h2>Detected Objects:</h2>
+        </div>
+
+        <div class="no-detection" id="noDetectionMessage" style="display: none;">
+            <p>No objects detected in the image.</p>
+        </div>
     </div>
-
-    <h2>Detected Objects:</h2>
-    <div id="output"></div>
 
     <script>
         document.getElementById('uploadForm').addEventListener('submit', function(e) {
@@ -56,11 +153,13 @@
 
         function displayResults(data) {
             const outputDiv = document.getElementById('output');
+            const noDetectionMessage = document.getElementById('noDetectionMessage');
             outputDiv.innerHTML = '';  // Clear previous results
 
             if (data.length === 0) {
-                outputDiv.innerHTML = '<p>No objects detected.</p>';
+                noDetectionMessage.style.display = 'block';
             } else {
+                noDetectionMessage.style.display = 'none';
                 data.forEach(item => {
                     const resultDiv = document.createElement('div');
                     resultDiv.className = 'result';
