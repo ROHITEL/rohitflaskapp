@@ -6,13 +6,25 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
+# Dynamically set the base directory for accessing model files
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Ensure upload folder exists in the deployment environment
+UPLOAD_FOLDER = '/tmp'  # Use '/tmp' for Render compatibility
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 # Load YOLOv4 model and configuration
-net = cv2.dnn.readNet("yolov4-tiny.weights", "yolov4-tiny.cfg")
+net = cv2.dnn.readNet(
+    os.path.join(BASE_DIR, "yolov4-tiny.weights"),
+    os.path.join(BASE_DIR, "yolov4-tiny.cfg")
+)
 
 # Load the COCO class labels
-with open("coco.names", "r") as f:
+with open(os.path.join(BASE_DIR, "coco.names"), "r") as f:
     classes = [line.strip() for line in f.readlines()]
 
+# Get YOLO layer names
 layer_names = net.getLayerNames()
 output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
 
@@ -28,14 +40,18 @@ def upload():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'})
-    
+
     try:
+        # Save the uploaded file to a temporary location
         filename = secure_filename(file.filename)
-        file_path = os.path.join('uploads', filename)
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
         file.save(file_path)
 
         # Process the image using YOLO
         img = cv2.imread(file_path)
+        if img is None:
+            return jsonify({'error': 'Unable to read the uploaded image'})
+
         height, width, channels = img.shape
         blob = cv2.dnn.blobFromImage(img, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
         net.setInput(blob)
@@ -80,4 +96,5 @@ def upload():
         return jsonify(result)
     except Exception as e:
         return jsonify({'error': f"An error occurred: {str(e)}"})
+
 
